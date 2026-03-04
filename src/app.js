@@ -12,6 +12,7 @@ const { registerRoutes } = require('./routes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
+const basePath = (process.env.BASE_PATH || '').trim().replace(/\/$/, '');
 
 app.set('trust proxy', true);
 app.set('view engine', 'ejs');
@@ -33,6 +34,27 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/storage', express.static(path.join(process.cwd(), 'storage')));
+
+app.use((req, res, next) => {
+  res.locals.basePath = basePath;
+
+  const originalRedirect = res.redirect.bind(res);
+  res.redirect = (url) => {
+    if (
+      typeof url === 'string' &&
+      basePath &&
+      url.startsWith('/') &&
+      !url.startsWith(`${basePath}/`) &&
+      url !== basePath
+    ) {
+      return originalRedirect(`${basePath}${url}`);
+    }
+
+    return originalRedirect(url);
+  };
+
+  return next();
+});
 
 registerRoutes(app);
 

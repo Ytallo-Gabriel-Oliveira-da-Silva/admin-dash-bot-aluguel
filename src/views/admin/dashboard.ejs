@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %></title>
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="<%= basePath %>/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -13,7 +13,7 @@
       <h1>Painel Admin</h1>
       <div style="display:flex;gap:8px;">
         <span class="badge">Credencial: Yt@ll0 / Yt@ll0</span>
-        <form method="post" action="/admin/logout"><button class="secondary" type="submit">Sair</button></form>
+        <form method="post" action="<%= basePath %>/admin/logout"><button class="secondary" type="submit">Sair</button></form>
       </div>
     </div>
 
@@ -37,7 +37,7 @@
     </div>
 
     <h2>Criar Cliente + Contrato</h2>
-    <form method="post" action="/admin/clientes" class="grid grid-2">
+    <form method="post" action="<%= basePath %>/admin/clientes" class="grid grid-2">
       <div>
         <label>Nome</label>
         <input type="text" name="nome" required />
@@ -66,7 +66,7 @@
             <td><%= cliente.nome %></td>
             <td><%= cliente.email %></td>
             <td><%= new Date(cliente.createdAt).toLocaleString('pt-BR') %></td>
-            <td><a href="/admin/clientes/<%= cliente.id %>">Gerenciar cliente</a></td>
+            <td><a href="<%= basePath %>/admin/clientes/<%= cliente.id %>">Gerenciar cliente</a></td>
           </tr>
         <% } %>
       </tbody>
@@ -97,8 +97,8 @@
               <% } %>
             </td>
             <td>
-              <form method="post" action="/admin/contratos/<%= contrato.id %>/status" class="grid">
-                <input type="hidden" name="returnTo" value="/admin/dashboard" />
+              <form method="post" action="<%= basePath %>/admin/contratos/<%= contrato.id %>/status" class="grid">
+                <input type="hidden" name="returnTo" value="<%= basePath %>/admin/dashboard" />
                 <select name="status">
                   <option value="aguardando_pagamento">aguardando_pagamento</option>
                   <option value="suspenso">suspenso</option>
@@ -106,8 +106,8 @@
                 </select>
                 <button type="submit">Atualizar</button>
               </form>
-              <form method="post" action="/admin/contratos/<%= contrato.id %>/cancelar" style="margin-top:8px;">
-                <input type="hidden" name="returnTo" value="/admin/dashboard" />
+              <form method="post" action="<%= basePath %>/admin/contratos/<%= contrato.id %>/cancelar" style="margin-top:8px;">
+                <input type="hidden" name="returnTo" value="<%= basePath %>/admin/dashboard" />
                 <button class="danger-btn" type="submit">Cancelar contrato</button>
               </form>
             </td>

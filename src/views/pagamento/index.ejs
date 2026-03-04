@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %></title>
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="<%= basePath %>/styles.css" />
 </head>
 <body>
   <div class="container">
@@ -13,7 +13,7 @@
 
     <% if (error) { %><div class="alert"><%= error %></div><% } %>
 
-    <form method="post" action="/pagamento/<%= contrato.tokenUnico %>" class="grid">
+    <form method="post" action="<%= basePath %>/pagamento/<%= contrato.tokenUnico %>" class="grid">
       <div>
         <label>Método de pagamento</label>
         <select name="tipo" id="tipoPagamento" onchange="toggleCardFields()">
@@ -98,17 +98,18 @@
     window.addEventListener('DOMContentLoaded', toggleCardFields);
 
     const token = '<%= contrato.tokenUnico %>';
+    const basePath = '<%= basePath %>';
     const expiresAtText = document.getElementById('expiresAt')?.textContent;
 
     if (document.getElementById('statusContrato')) {
       setInterval(async () => {
-        const response = await fetch('/contrato/' + token + '/status');
+        const response = await fetch(basePath + '/contrato/' + token + '/status');
         if (response.ok) {
           const data = await response.json();
           const statusEl = document.getElementById('statusContrato');
           statusEl.textContent = data.statusContrato;
           if (data.statusContrato === 'ativo') {
-            window.location.href = '/status/' + token;
+            window.location.href = basePath + '/status/' + token;
           }
         }
       }, 10000);

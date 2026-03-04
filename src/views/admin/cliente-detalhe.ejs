@@ -4,18 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %></title>
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="<%= basePath %>/styles.css" />
 </head>
 <body>
   <div class="container">
     <div class="toolbar">
       <h1>Gestão do Cliente</h1>
-      <a href="/admin/dashboard">← Voltar ao dashboard</a>
+      <a href="<%= basePath %>/admin/dashboard">← Voltar ao dashboard</a>
     </div>
 
     <div class="card">
       <h2>Dados do Cliente</h2>
-      <form method="post" action="/admin/clientes/<%= cliente.id %>" class="grid grid-2">
+      <form method="post" action="<%= basePath %>/admin/clientes/<%= cliente.id %>" class="grid grid-2">
         <div>
           <label>Nome</label>
           <input type="text" name="nome" required value="<%= cliente.nome %>" />
@@ -36,8 +36,8 @@
           <h2>Contrato <%= contrato.id.slice(0, 8) %>...</h2>
           <div style="display:flex; gap:8px; align-items:center;">
             <span class="badge"><%= contrato.status %></span>
-            <form method="post" action="/admin/contratos/<%= contrato.id %>/cancelar">
-              <input type="hidden" name="returnTo" value="/admin/clientes/<%= cliente.id %>" />
+            <form method="post" action="<%= basePath %>/admin/contratos/<%= contrato.id %>/cancelar">
+              <input type="hidden" name="returnTo" value="<%= basePath %>/admin/clientes/<%= cliente.id %>" />
               <button class="danger-btn" type="submit">Cancelar contrato</button>
             </form>
           </div>

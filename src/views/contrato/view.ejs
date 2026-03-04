@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %></title>
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="<%= basePath %>/styles.css" />
 </head>
 <body>
   <div class="container">
@@ -57,8 +57,8 @@
     <p>Assinatura Eletrônica do CONTRATANTE</p>
 
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <a href="/pagamento/<%= contrato.tokenUnico %>"><button>Ir para pagamento</button></a>
-      <a href="/contrato/<%= contrato.tokenUnico %>/pdf"><button class="secondary">Baixar PDF (quando ativo)</button></a>
+      <a href="<%= basePath %>/pagamento/<%= contrato.tokenUnico %>"><button>Ir para pagamento</button></a>
+      <a href="<%= basePath %>/contrato/<%= contrato.tokenUnico %>/pdf"><button class="secondary">Baixar PDF (quando ativo)</button></a>
     </div>
   </div>
 </body>
