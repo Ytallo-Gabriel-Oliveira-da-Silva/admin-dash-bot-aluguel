@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senhaHash String   @map("senha_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model Cliente {
+  id        String     @id @default(uuid())
+  nome      String
+  email     String     @unique
+  asaasCustomerId String? @unique @map("asaas_customer_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  contratos Contrato[]
+
+  @@map("clientes")
+}
+
+model Contrato {
+  id                String          @id @default(uuid())
+  clienteId         String          @map("cliente_id")
+  tokenUnico        String          @unique @map("token_unico")
+  status            String          @default("pendente")
+  nomeContratante   String?         @map("nome_contratante")
+  cpfCnpj           String?         @map("cpf_cnpj")
+  endereco          String?
+  emailContratante  String?         @map("email_contratante")
+  ipAssinatura      String?         @map("ip_assinatura")
+  userAgent         String?         @map("user_agent")
+  dataAssinatura    DateTime?       @map("data_assinatura")
+  metodoPagamento   String?         @map("metodo_pagamento")
+  valor             Decimal
+  dataAtivacao      DateTime?       @map("data_ativacao")
+  dataVencimento    DateTime?       @map("data_vencimento")
+  contratoPdfUrl    String?         @map("contrato_pdf_url")
+  tokenExpiraEm     DateTime?       @map("token_expira_em")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  cliente           Cliente         @relation(fields: [clienteId], references: [id])
+  pagamentos        Pagamento[]
+
+  @@map("contratos")
+  @@index([clienteId])
+  @@index([status])
+}
+
+model Pagamento {
+  id              String          @id @default(uuid())
+  contratoId      String          @map("contrato_id")
+  asaasPaymentId  String          @unique @map("asaas_payment_id")
+  tipo            String
+  valor           Decimal
+  valorOriginal   Decimal?         @map("valor_original")
+  valorMulta      Decimal?         @map("valor_multa")
+  valorJuros      Decimal?         @map("valor_juros")
+  status          String          @default("pendente")
+  dataVencimento  DateTime?       @map("data_vencimento")
+  dataConfirmacao DateTime?       @map("data_confirmacao")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  contrato        Contrato        @relation(fields: [contratoId], references: [id])
+
+  @@map("pagamentos")
+  @@index([contratoId])
+  @@index([status])
+}
+
+model WebhookEvent {
+  id             String   @id @default(uuid())
+  asaasEventId   String   @unique @map("asaas_event_id")
+  eventType      String   @map("event_type")
+  payload        Json
+  processedAt    DateTime @default(now()) @map("processed_at")
+
+  @@map("webhook_events")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actor      String
+  action     String
+  entity     String
+  entityId   String?  @map("entity_id")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+  @@index([entity, entityId])
+}

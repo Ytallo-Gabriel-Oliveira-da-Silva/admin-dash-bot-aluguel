@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Pagamento do Contrato</h1>
+    <p>Status atual do contrato: <span class="badge"><%= contrato.status %></span></p>
+
+    <% if (error) { %><div class="alert"><%= error %></div><% } %>
+
+    <form method="post" action="/pagamento/<%= contrato.tokenUnico %>" class="grid">
+      <div>
+        <label>Método de pagamento</label>
+        <select name="tipo" id="tipoPagamento" onchange="toggleCardFields()">
+          <option value="pix" <%= selectedTipo === 'pix' ? 'selected' : '' %>>PIX</option>
+          <option value="cartao_credito" <%= selectedTipo === 'cartao_credito' ? 'selected' : '' %>>Cartão de crédito</option>
+          <option value="debito" <%= selectedTipo === 'debito' ? 'selected' : '' %>>Débito</option>
+        </select>
+      </div>
+
+      <div id="installmentsWrap" style="display:none;">
+        <label>Parcelas (até 3x)</label>
+        <select name="installments">
+          <option value="1">1x</option>
+          <option value="2">2x</option>
+          <option value="3">3x</option>
+        </select>
+      </div>
+
+      <div id="cardFields" style="display:none;" class="payment-card grid">
+        <h3>Dados do cartão</h3>
+        <div class="grid grid-2">
+          <div><label>Nome no cartão</label><input name="cardHolderName" type="text" placeholder="Nome impresso no cartão" /></div>
+          <div><label>Número do cartão</label><input name="cardNumber" type="text" placeholder="0000 0000 0000 0000" /></div>
+          <div><label>Validade (mês)</label><input name="expiryMonth" type="text" placeholder="MM" /></div>
+          <div><label>Validade (ano)</label><input name="expiryYear" type="text" placeholder="AAAA" /></div>
+          <div><label>CCV</label><input name="ccv" type="text" placeholder="123" /></div>
+          <div><label>CPF/CNPJ titular</label><input name="holderCpfCnpj" type="text" placeholder="CPF ou CNPJ" /></div>
+          <div><label>E-mail titular</label><input name="holderEmail" type="email" placeholder="email@dominio.com" /></div>
+          <div><label>Nome do titular</label><input name="holderName" type="text" placeholder="Nome completo" /></div>
+          <div><label>CEP</label><input name="holderPostalCode" type="text" placeholder="00000-000" /></div>
+          <div><label>Número do endereço</label><input name="holderAddressNumber" type="text" placeholder="123" /></div>
+          <div><label>Telefone</label><input name="holderPhone" type="text" placeholder="(11) 99999-9999" /></div>
+        </div>
+      </div>
+
+      <button type="submit">Gerar cobrança</button>
+    </form>
+
+    <p style="margin-top: 8px; color:#4b5563;">Para gerar cobrança real, configure as credenciais do gateway Asaas no arquivo .env.</p>
+
+    <% if (pixData) { %>
+      <hr/>
+      <h2>Cobrança PIX</h2>
+      <% if (pixData.pixQrCode) { %>
+        <p>
+          <img
+            src="<%= pixData.pixQrCode.startsWith('http') || pixData.pixQrCode.startsWith('data:') ? pixData.pixQrCode : ('data:image/png;base64,' + pixData.pixQrCode) %>"
+            alt="QR Code PIX"
+            style="max-width:220px;"
+          />
+        </p>
+      <% } %>
+      <p><strong>Código copia e cola:</strong></p>
+      <textarea class="mono" rows="4" readonly><%= pixData.pixPayload || 'Não retornado pela API' %></textarea>
+      <p><strong>Expira em:</strong> <span id="expiresAt"><%= pixData.expirationDate || 'N/A' %></span></p>
+      <p><strong>Status:</strong> <span id="statusContrato" class="badge">aguardando_pagamento</span></p>
+      <p id="countdown" class="mono"></p>
+    <% } %>
+
+    <% if (paymentData && !pixData) { %>
+      <hr/>
+      <h2>Cobrança de Cartão</h2>
+      <p><strong>ID da cobrança:</strong> <span class="mono"><%= paymentData.id %></span></p>
+      <p><strong>Status:</strong> <span class="badge"><%= paymentData.status || 'PENDING' %></span></p>
+      <p><strong>Vencimento:</strong> <%= paymentData.expirationDate ? new Date(paymentData.expirationDate).toLocaleString('pt-BR') : 'N/A' %></p>
+      <% if (paymentData.invoiceUrl) { %>
+        <p><a href="<%= paymentData.invoiceUrl %>" target="_blank">Abrir comprovante/checkout</a></p>
+      <% } %>
+    <% } %>
+  </div>
+
+  <script>
+    function toggleCardFields() {
+      const tipo = document.getElementById('tipoPagamento').value;
+      const card = document.getElementById('cardFields');
+      const installments = document.getElementById('installmentsWrap');
+      const isCard = tipo === 'cartao_credito' || tipo === 'debito';
+      card.style.display = isCard ? 'grid' : 'none';
+      installments.style.display = tipo === 'cartao_credito' ? 'block' : 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', toggleCardFields);
+
+    const token = '<%= contrato.tokenUnico %>';
+    const expiresAtText = document.getElementById('expiresAt')?.textContent;
+
+    if (document.getElementById('statusContrato')) {
+      setInterval(async () => {
+        const response = await fetch('/contrato/' + token + '/status');
+        if (response.ok) {
+          const data = await response.json();
+          const statusEl = document.getElementById('statusContrato');
+          statusEl.textContent = data.statusContrato;
+          if (data.statusContrato === 'ativo') {
+            window.location.href = '/status/' + token;
+          }
+        }
+      }, 10000);
+    }
+
+    if (expiresAtText && expiresAtText !== 'N/A') {
+      const end = new Date(expiresAtText);
+      setInterval(() => {
+        const diff = end.getTime() - Date.now();
+        const countdown = document.getElementById('countdown');
+        if (!countdown) return;
+
+        if (diff <= 0) {
+          countdown.textContent = 'Tempo expirado.';
+          return;
+        }
+
+        const totalSec = Math.floor(diff / 1000);
+        const hours = Math.floor(totalSec / 3600);
+        const min = Math.floor((totalSec % 3600) / 60);
+        const sec = totalSec % 60;
+        countdown.textContent = `Tempo restante: ${String(hours).padStart(2, '0')}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

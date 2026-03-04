@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="toolbar">
+      <h1>Gestão do Cliente</h1>
+      <a href="/admin/dashboard">← Voltar ao dashboard</a>
+    </div>
+
+    <div class="card">
+      <h2>Dados do Cliente</h2>
+      <form method="post" action="/admin/clientes/<%= cliente.id %>" class="grid grid-2">
+        <div>
+          <label>Nome</label>
+          <input type="text" name="nome" required value="<%= cliente.nome %>" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" required value="<%= cliente.email %>" />
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+
+    <% for (const contrato of contratosView) { %>
+      <div class="card" style="margin-top: 20px;">
+        <div class="toolbar">
+          <h2>Contrato <%= contrato.id.slice(0, 8) %>...</h2>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge"><%= contrato.status %></span>
+            <form method="post" action="/admin/contratos/<%= contrato.id %>/cancelar">
+              <input type="hidden" name="returnTo" value="/admin/clientes/<%= cliente.id %>" />
+              <button class="danger-btn" type="submit">Cancelar contrato</button>
+            </form>
+          </div>
+        </div>
+
+        <p><strong>Resumo 12 meses:</strong> Pago: <%= contrato.resumo.pago %> | Pendente: <%= contrato.resumo.pendente %> | Atrasado: <%= contrato.resumo.atrasado %></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Parcela</th>
+              <th>Valor</th>
+              <th>Prazo de pagamento</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const parcela of contrato.parcelas) { %>
+              <tr>
+                <td><%= parcela.mes %></td>
+                <td>R$ <%= parcela.valor.toFixed(2) %></td>
+                <td><%= new Date(parcela.prazo).toLocaleDateString('pt-BR') %></td>
+                <td>
+                  <span class="badge <%= parcela.status === 'atrasado' ? 'badge-danger' : parcela.status === 'pago' ? 'badge-success' : '' %>">
+                    <%= parcela.status %>
+                  </span>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

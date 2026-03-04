@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="toolbar">
+      <h1>Painel Admin</h1>
+      <div style="display:flex;gap:8px;">
+        <span class="badge">Credencial: Yt@ll0 / Yt@ll0</span>
+        <form method="post" action="/admin/logout"><button class="secondary" type="submit">Sair</button></form>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card"><h3>Clientes</h3><p><%= stats.clientes %></p></div>
+      <div class="card"><h3>Contratos</h3><p><%= stats.contratos %></p></div>
+      <div class="card"><h3>Assinados</h3><p><%= stats.assinados %></p></div>
+      <div class="card"><h3>Ativos</h3><p><%= stats.ativos %></p></div>
+      <div class="card danger"><h3>Atrasados</h3><p><%= stats.atrasados %></p></div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Contratos Assinados (12 meses)</h3>
+        <canvas id="chartSigned" height="140"></canvas>
+      </div>
+      <div class="card">
+        <h3>Contas Atrasadas (12 meses)</h3>
+        <canvas id="chartOverdue" height="140"></canvas>
+      </div>
+    </div>
+
+    <h2>Criar Cliente + Contrato</h2>
+    <form method="post" action="/admin/clientes" class="grid grid-2">
+      <div>
+        <label>Nome</label>
+        <input type="text" name="nome" required />
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" name="email" required />
+      </div>
+      <div>
+        <label>Valor mensal (fixo)</label>
+        <input type="text" disabled value="R$ <%= valorMensal.toFixed(2) %>" />
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit">Criar cliente e contrato</button>
+      </div>
+    </form>
+
+    <h2>Clientes</h2>
+    <table>
+      <thead>
+        <tr><th>Nome</th><th>Email</th><th>Criado em</th><th>Gestão</th></tr>
+      </thead>
+      <tbody>
+        <% for (const cliente of clientes) { %>
+          <tr>
+            <td><%= cliente.nome %></td>
+            <td><%= cliente.email %></td>
+            <td><%= new Date(cliente.createdAt).toLocaleString('pt-BR') %></td>
+            <td><a href="/admin/clientes/<%= cliente.id %>">Gerenciar cliente</a></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <h2>Contratos e Pagamentos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Status</th>
+          <th>Link contrato</th>
+          <th>Pagamento</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const contrato of contratos) { %>
+          <tr>
+            <td><%= contrato.cliente.nome %><br/><small><%= contrato.cliente.email %></small></td>
+            <td><span class="badge"><%= contrato.status %></span></td>
+            <td class="mono"><a href="<%= baseUrl %>/contrato/<%= contrato.tokenUnico %>" target="_blank"><%= baseUrl %>/contrato/<%= contrato.tokenUnico %></a></td>
+            <td>
+              <% if (contrato.pagamentos.length) { %>
+                <span class="badge"><%= contrato.pagamentos[0].status %></span>
+              <% } else { %>
+                <span>-</span>
+              <% } %>
+            </td>
+            <td>
+              <form method="post" action="/admin/contratos/<%= contrato.id %>/status" class="grid">
+                <input type="hidden" name="returnTo" value="/admin/dashboard" />
+                <select name="status">
+                  <option value="aguardando_pagamento">aguardando_pagamento</option>
+                  <option value="suspenso">suspenso</option>
+                  <option value="cancelado">cancelado</option>
+                </select>
+                <button type="submit">Atualizar</button>
+              </form>
+              <form method="post" action="/admin/contratos/<%= contrato.id %>/cancelar" style="margin-top:8px;">
+                <input type="hidden" name="returnTo" value="/admin/dashboard" />
+                <button class="danger-btn" type="submit">Cancelar contrato</button>
+              </form>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div
+    id="chartsData"
+    data-labels='<%- JSON.stringify(chartLabels) %>'
+    data-signed='<%- JSON.stringify(signedSeries) %>'
+    data-overdue='<%- JSON.stringify(overdueSeries) %>'
+    style="display:none;"
+  ></div>
+
+  <script>
+    const chartsDataElement = document.getElementById('chartsData');
+    const labels = JSON.parse(chartsDataElement.dataset.labels || '[]');
+    const signedSeries = JSON.parse(chartsDataElement.dataset.signed || '[]');
+    const overdueSeries = JSON.parse(chartsDataElement.dataset.overdue || '[]');
+
+    new Chart(document.getElementById('chartSigned'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Assinados',
+          data: signedSeries,
+          borderColor: '#1d4ed8',
+          backgroundColor: 'rgba(29, 78, 216, 0.15)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    new Chart(document.getElementById('chartOverdue'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Atrasados',
+          data: overdueSeries,
+          borderColor: '#b91c1c',
+          backgroundColor: 'rgba(185, 28, 28, 0.3)'
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container center">
+    <h1>Status do Contrato</h1>
+    <p>Contrato: <strong><%= contrato.id %></strong></p>
+    <p>Status: <span class="badge"><%= contrato.status %></span></p>
+    <p>Ativação: <%= contrato.dataAtivacao ? new Date(contrato.dataAtivacao).toLocaleString('pt-BR') : '-' %></p>
+    <p>Vencimento: <%= contrato.dataVencimento ? new Date(contrato.dataVencimento).toLocaleString('pt-BR') : '-' %></p>
+  </div>
+</body>
+</html>

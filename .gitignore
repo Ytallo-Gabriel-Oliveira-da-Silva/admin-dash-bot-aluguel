@@ -1,0 +1,17 @@
+node_modules
+.env
+.prisma
+dist
+coverage
+.DS_Store
+npm-debug.log*
+*.log
+
+# SQLite local database
+*.db
+*.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# Generated artifacts
+storage/contratos/*.pdf
