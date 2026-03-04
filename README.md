@@ -55,6 +55,7 @@ prisma/
    - `ASAAS_API_URL`
    - `ASAAS_API_KEY`
    - `ASAAS_WEBHOOK_SECRET`
+  - `COOKIE_SECURE` (`false` para HTTP puro em IP; `true` com HTTPS)
 
 ## Rodando local
 ```bash

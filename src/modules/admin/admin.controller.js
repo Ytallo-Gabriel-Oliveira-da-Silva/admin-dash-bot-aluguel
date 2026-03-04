@@ -34,9 +34,11 @@ const doLogin = asyncHandler(async (req, res) => {
   const parsed = loginSchema.parse(req.body);
   const { token } = await loginAdmin(parsed);
 
+  const cookieSecure = process.env.COOKIE_SECURE === 'true';
+
   res.cookie('admin_token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: cookieSecure,
     sameSite: 'strict',
     maxAge: 24 * 60 * 60 * 1000
   });
